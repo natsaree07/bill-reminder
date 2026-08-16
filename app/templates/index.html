@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document & Bill Due Reminder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg-1: #070b14;
+            --bg-2: #0f172a;
+            --card: rgba(15, 23, 42, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent: #38bdf8;
+            --accent-2: #818cf8;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+
+        body {
+            font-family: 'Prompt', 'Segoe UI', sans-serif;
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            padding: 3rem 1.5rem;
+            background-color: var(--bg-1);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ---------- Background Animation Container ---------- */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+        }
+
+        /* ลูกบอลแสงเคลื่อนไหว (Animated Orbs) */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.35;
+            animation: floatOrb 20s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: #38bdf8;
+            top: -100px; left: -100px;
+            animation-duration: 18s;
+        }
+
+        .orb-2 {
+            width: 600px; height: 600px;
+            background: #818cf8;
+            bottom: -150px; right: -100px;
+            animation-duration: 22s;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 400px; height: 400px;
+            background: #c084fc;
+            top: 40%; left: 30%;
+            animation-duration: 16s;
+            animation-delay: -10s;
+        }
+
+        @keyframes floatOrb {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            50% {
+                transform: translate(120px, 80px) scale(1.15);
+            }
+            100% {
+                transform: translate(-80px, 150px) scale(0.9);
+            }
+        }
+
+        /* ---------- Main Layout ---------- */
+        .wrap { max-width: 850px; margin: 0 auto; position: relative; z-index: 1; }
+
+        header { 
+            margin-bottom: 2.2rem; 
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0 0 0.4rem 0;
+            background: linear-gradient(135deg, #ffffff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .subtitle { 
+            color: var(--text-dim); 
+            font-weight: 300; 
+            font-size: 0.95rem; 
+        }
+
+        /* ---------- แถบสรุปสถิติ ---------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-box {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .stat-box:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); }
+        .stat-num { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
+        .stat-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.3rem; font-weight: 400; }
+        
+        .stat-box.overdue-stat .stat-num { color: #f87171; }
+        .stat-box.soon-stat .stat-num { color: #fb923c; }
+        .stat-box.normal-stat .stat-num { color: var(--accent); }
+        .stat-box.done-stat .stat-num { color: #4ade80; }
+
+        /* ---------- ฟอร์มเพิ่มรายการ ---------- */
+        .form-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-row-full { grid-column: 1 / -1; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        
+        .form-card input, .form-card select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.92rem;
+            transition: all 0.2s;
+        }
+        .form-card input:focus, .form-card select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .recurring-label {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: var(--text-dim); font-size: 0.9rem; cursor: pointer;
+            user-select: none;
+        }
+        .recurring-label input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none;
+            padding: 0.8rem 1.6rem;
+            border-radius: var(--radius-md);
+            color: #070b14;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+            margin-left: auto;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+        
+        .btn-secondary {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            color: var(--text-dim);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ---------- การ์ดรายการ ---------- */
+        .item-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #334155;
+            position: relative;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: all 0.25s;
+            animation: fadeIn 0.4s ease;
+        }
+        .item-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-card.overdue { border-left-color: #f87171; }
+        .item-card.critical, .item-card.due-soon { border-left-color: #fb923c; }
+        .item-card.notice { border-left-color: #facc15; }
+        .item-card.done { border-left-color: #4ade80; opacity: 0.5; }
+
+        .badge {
+            position: absolute;
+            top: 1.2rem; right: 1.5rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
+        }
+        .badge.overdue-badge { background: rgba(248, 113, 113, 0.15); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .badge.critical-badge, .badge.due-soon-badge { background: rgba(251, 146, 60, 0.15); color: #fed7aa; border: 1px solid rgba(251, 146, 60, 0.3); }
+        .badge.notice-badge { background: rgba(250, 204, 21, 0.15); color: #fde047; border: 1px solid rgba(250, 204, 21, 0.3); }
+        .badge.normal-badge { background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid var(--card-border); }
+        .badge.done-badge { background: rgba(74, 222, 128, 0.15); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.3); }
+
+        .item-title { font-weight: 600; font-size: 1.1rem; padding-right: 7rem; }
+        .item-meta { color: var(--text-dim); font-size: 0.85rem; margin-top: 0.3rem; display: flex; gap: 0.5rem; align-items: center; }
+        
+        .days-left { font-weight: 500; margin-top: 0.6rem; font-size: 0.9rem; }
+        .days-left.overdue-text { color: #f87171; font-weight: 600; }
+        .days-left.critical-text, .days-left.due-soon-text { color: #fb923c; font-weight: 600; }
+        .days-left.notice-text { color: #fde047; }
+
+        .actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+        
+        button.done-btn {
+            background: rgba(74, 222, 128, 0.12);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        button.done-btn:hover { background: rgba(74, 222, 128, 0.25); }
+
+        button.delete-btn {
+            background: transparent;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button.delete-btn:hover { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.4); }
+
+        .empty {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 3.5rem 1rem;
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-md);
+            border: 1px dashed var(--card-border);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-card { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .item-title { padding-right: 0; }
+            .badge { position: static; display: inline-block; margin-bottom: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Animated Orbs -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="wrap">
+        <header>
+            <h1>Document & Bill Reminder</h1>
+            <p class="subtitle">ระบบแจ้งเตือนบิลและเอกสารสำคัญล่วงหน้า ({{ thresholds_text }})</p>
+        </header>
+
+        <div class="stats" id="statsBar">
+            <div class="stat-box overdue-stat"><div class="stat-num" id="statOverdue">0</div><div class="stat-label">เลยกำหนด</div></div>
+            <div class="stat-box soon-stat"><div class="stat-num" id="statSoon">0</div><div class="stat-label">ใกล้ครบกำหนด</div></div>
+            <div class="stat-box normal-stat"><div class="stat-num" id="statNormal">0</div><div class="stat-label">ปกติ</div></div>
+            <div class="stat-box done-stat"><div class="stat-num" id="statDone">0</div><div class="stat-label">เสร็จแล้ว</div></div>
+        </div>
+
+        <div class="form-card">
+            <input id="title" placeholder="ชื่อรายการ เช่น ค่าไฟ, ส่งงานโปรเจกต์">
+            <select id="category">
+                <option value="บิล">💳 บิล</option>
+                <option value="เอกสาร">📄 เอกสาร</option>
+                <option value="การบ้าน/งาน">📚 การบ้าน/งาน</option>
+                <option value="อื่นๆ">📌 อื่นๆ</option>
+            </select>
+            <input id="amount" type="number" placeholder="จำนวนเงิน (บาท)">
+            
+            <div class="form-row-full">
+                <input id="dueDate" type="date" style="flex: 1.2;">
+                <label class="recurring-label" style="flex: 1;">
+                    <input id="isRecurring" type="checkbox">
+                    🔁 บิลรอบเดือนอัตโนมัติ
+                </label>
+                <button class="btn-primary" onclick="addItem()">+ เพิ่มรายการ</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <span style="font-size: 0.9rem; color: var(--text-dim); font-weight: 500;">รายการทั้งหมด</span>
+            <button class="btn-secondary" onclick="checkNow()">🔄 อัปเดตสถานะล่าสุด</button>
+        </div>
+
+        <div id="itemList"></div>
+    </div>
+
+    <script>
+        function urgencyLevel(item) {
+            if (item.is_done) return 'done';
+            if (item.urgency === 'เลยกำหนดแล้ว') return 'overdue';
+            if (item.urgency.startsWith('ใกล้ครบกำหนดมาก')) return 'critical';
+            if (item.urgency.startsWith('ใกล้ครบกำหนด')) return 'due-soon';
+            if (item.urgency.startsWith('เตือนล่วงหน้า')) return 'notice';
+            return 'normal';
+        }
+
+        function urgencyClass(item) {
+            const level = urgencyLevel(item);
+            return level === 'normal' ? '' : level;
+        }
+
+        function badgeClass(item) {
+            return urgencyLevel(item) + '-badge';
+        }
+
+        function daysLeftText(item) {
+            if (item.is_done) return '✓ เสร็จเรียบร้อยแล้ว';
+            if (item.days_left < 0) return `⚠️ เลยกำหนดมาแล้ว ${Math.abs(item.days_left)} วัน`;
+            if (item.days_left === 0) return '🔥 ครบกำหนดวันนี้!';
+            return `⏳ เหลืออีก ${item.days_left} วัน`;
+        }
+
+        function updateStats(items) {
+            let overdue = 0, soon = 0, normal = 0, done = 0;
+            items.forEach(item => {
+                const level = urgencyLevel(item);
+                if (level === 'done') done++;
+                else if (level === 'overdue') overdue++;
+                else if (level === 'critical' || level === 'due-soon' || level === 'notice') soon++;
+                else normal++;
+            });
+            document.getElementById('statOverdue').textContent = overdue;
+            document.getElementById('statSoon').textContent = soon;
+            document.getElementById('statNormal').textContent = normal;
+            document.getElementById('statDone').textContent = done;
+        }
+
+        async function loadItems() {
+            try {
+                const res = await fetch('/api/items');
+                const items = await res.json();
+                const container = document.getElementById('itemList');
+
+                updateStats(items);
+
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="empty">📭 ยังไม่มีรายการในระบบ ลองเพิ่มบิลหรือเอกสารใหม่ด้านบนได้เลยครับ</div>';
+                    return;
+                }
+
+                container.innerHTML = items.map(item => {
+                    const cardClass = urgencyClass(item);
+                    const level = urgencyLevel(item);
+                    const daysClass = level === 'normal' || level === 'done' ? '' : `${level}-text`;
+                    return `
+                    <div class="item-card ${cardClass}">
+                        ${item.has_new_update ? `<span class="badge ${badgeClass(item)}">${item.urgency}</span>` : (item.is_done ? '<span class="badge done-badge">เสร็จแล้ว</span>' : '')}
+                        <div class="item-title">${item.title} ${item.is_recurring ? '<span title="บิลรายเดือน" style="font-size:0.8rem;">🔁</span>' : ''}</div>
+                        <div class="item-meta">
+                            <span>🏷️ ${item.category}</span>
+                            ${item.amount ? `<span>• 💰 ${Number(item.amount).toLocaleString()} บาท</span>` : ''}
+                            <span>• 📅 ${item.due_date}</span>
+                        </div>
+                        <div class="days-left ${daysClass}">${daysLeftText(item)}</div>
+                        <div class="actions">
+                            ${!item.is_done ? `<button class="done-btn" onclick="markDone(${item.id})">✓ ทำเสร็จแล้ว</button>` : ''}
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">ลบ</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                // สำหรับพรีวิวตอนยังไม่มี Backend
+                document.getElementById('itemList').innerHTML = '<div class="empty">📭 ยังไม่มีรายการในระบบ ลองเพิ่มบิลหรือเอกสารใหม่ด้านบนได้เลยครับ</div>';
+            }
+        }
+
+        async function addItem() {
+            const title = document.getElementById('title').value.trim();
+            const category = document.getElementById('category').value;
+            const amount = document.getElementById('amount').value;
+            const due_date = document.getElementById('dueDate').value;
+            const is_recurring = document.getElementById('isRecurring').checked;
+
+            if (!title || !due_date) {
+                alert('กรุณากรอกชื่อรายการและวันครบกำหนดให้ครบถ้วน');
+                return;
+            }
+
+            await fetch('/api/items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, category, amount, due_date, is_recurring })
+            });
+
+            document.getElementById('title').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('dueDate').value = '';
+            document.getElementById('isRecurring').checked = false;
+            loadItems();
+        }
+
+        async function markDone(id) {
+            const res = await fetch(`/api/items/${id}/done`, { method: 'POST' });
+            loadItems();
+        }
+
+        async function deleteItem(id) {
+            if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+                await fetch(`/api/items/${id}`, { method: 'DELETE' });
+                loadItems();
+            }
+        }
+
+        async function checkNow() {
+            await fetch('/api/check-now');
+            setTimeout(loadItems, 500);
+        }
+
+        loadItems();
+        setInterval(loadItems, 15000);
+    </script>
+</body>
+</html>

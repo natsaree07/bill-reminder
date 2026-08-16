@@ -1,0 +1,49 @@
+services:
+  web:
+    build: ./app          # build image จาก Dockerfile ที่เขียนเอง
+    container_name: reminder_web
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=reminderdb
+      - DB_USER=reminder_user
+      - DB_PASSWORD=reminder_pass
+      - REMINDER_THRESHOLDS=7,3,1
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  notifier:
+    build: ./notifier     # build image จาก Dockerfile ที่เขียนเอง (image ที่ 2)
+    container_name: reminder_notifier
+    environment:
+      - DB_HOST=db
+      - DB_NAME=reminderdb
+      - DB_USER=reminder_user
+      - DB_PASSWORD=reminder_pass
+      # ----- ตั้งค่าอีเมลผู้ส่ง (ใช้ Gmail App Password ไม่ใช่รหัสผ่านจริง) -----
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=natsaree23012548@gmail.com
+      - SMTP_PASSWORD=nfvwreljgjnbumrg
+      - NOTIFY_TO_EMAIL=natsaree23012548@gmail.com
+      - CHECK_INTERVAL_SECONDS=15
+      - OVERDUE_REPEAT_HOURS=0.02
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine   # official image สำหรับฐานข้อมูล
+    container_name: reminder_db
+    environment:
+      - POSTGRES_USER=reminder_user
+      - POSTGRES_PASSWORD=reminder_pass
+      - POSTGRES_DB=reminderdb
+    volumes:
+      - reminder_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  reminder_db_data:
