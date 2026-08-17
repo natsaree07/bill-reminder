@@ -25,9 +25,9 @@ services:
       # ----- ตั้งค่าอีเมลผู้ส่ง (ใช้ Gmail App Password ไม่ใช่รหัสผ่านจริง) -----
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - SMTP_USER=natsaree23012548@gmail.com
-      - SMTP_PASSWORD=nfvwreljgjnbumrg
-      - NOTIFY_TO_EMAIL=natsaree23012548@gmail.com
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - NOTIFY_TO_EMAIL=${NOTIFY_TO_EMAIL}
       - CHECK_INTERVAL_SECONDS=15
       - OVERDUE_REPEAT_HOURS=0.02
     depends_on:
