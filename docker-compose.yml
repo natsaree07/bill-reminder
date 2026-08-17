@@ -1,9 +1,16 @@
 services:
+
+  # ---------------- Web Application ----------------
   web:
-    build: ./app          # build image จาก Dockerfile ที่เขียนเอง
+    # Build Image จาก Dockerfile ที่เขียนเองในโฟลเดอร์ app
+    build: ./app
     container_name: reminder_web
+
+    # เชื่อม Port เครื่องเรา 5000 กับ Port ภายใน Container 5000
     ports:
       - "5000:5000"
+
+    # กำหนด Environment Variables สำหรับ Application และ Database
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=db
@@ -11,41 +18,66 @@ services:
       - DB_USER=reminder_user
       - DB_PASSWORD=reminder_pass
       - REMINDER_THRESHOLDS=7,3,1
+
+    # รอให้ Database Service เริ่มทำงานก่อน
     depends_on:
       - db
+
+    # หาก Container หยุด ให้ Docker พยายามเริ่มใหม่
     restart: unless-stopped
 
+
+  # ---------------- Notification Worker ----------------
   notifier:
-    build: ./notifier     # build image จาก Dockerfile ที่เขียนเอง (image ที่ 2)
+    # Build Image จาก Dockerfile ของ Notification Worker
+    build: ./notifier
     container_name: reminder_notifier
+
+    # กำหนด Environment Variables สำหรับ Database และ Email
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=db
       - DB_NAME=reminderdb
       - DB_USER=reminder_user
       - DB_PASSWORD=reminder_pass
-      # ----- ตั้งค่าอีเมลผู้ส่ง (ใช้ Gmail App Password ไม่ใช่รหัสผ่านจริง) -----
+
+      # ตั้งค่า Gmail SMTP สำหรับส่ง Email
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - NOTIFY_TO_EMAIL=${NOTIFY_TO_EMAIL}
+
+      # กำหนดรอบการตรวจสอบและการแจ้งเตือนซ้ำ
       - CHECK_INTERVAL_SECONDS=15
       - OVERDUE_REPEAT_HOURS=0.02
+
     depends_on:
       - db
+
     restart: unless-stopped
 
+
+  # ---------------- PostgreSQL Database ----------------
   db:
-    image: postgres:16-alpine   # official image สำหรับฐานข้อมูล
+    # ใช้ PostgreSQL Official Image
+    image: postgres:16-alpine
     container_name: reminder_db
+
+    # กำหนดข้อมูลสำหรับสร้าง Database
     environment:
       - POSTGRES_USER=reminder_user
       - POSTGRES_PASSWORD=reminder_pass
       - POSTGRES_DB=reminderdb
+
+    # เก็บข้อมูล Database ไว้ใน Volume
+    # ทำให้ข้อมูลไม่หายเมื่อ Container ถูกลบ
     volumes:
       - reminder_db_data:/var/lib/postgresql/data
+
     restart: unless-stopped
 
+
+# สร้าง Persistent Volume สำหรับเก็บข้อมูล PostgreSQL
 volumes:
   reminder_db_data:
