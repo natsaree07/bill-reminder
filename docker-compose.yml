@@ -5,6 +5,7 @@ services:
     ports:
       - "5000:5000"
     environment:
+      - PYTHONUNBUFFERED=1
       - DB_HOST=db
       - DB_NAME=reminderdb
       - DB_USER=reminder_user
@@ -18,6 +19,7 @@ services:
     build: ./notifier     # build image จาก Dockerfile ที่เขียนเอง (image ที่ 2)
     container_name: reminder_notifier
     environment:
+      - PYTHONUNBUFFERED=1
       - DB_HOST=db
       - DB_NAME=reminderdb
       - DB_USER=reminder_user

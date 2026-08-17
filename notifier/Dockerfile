@@ -1,16 +1,17 @@
-# ---- Dockerfile: Notification Worker ----
-# container นี้ไม่มี web server ทำหน้าที่เป็น background worker อย่างเดียว
+# Container นี้เป็น Background Worker ไม่มี Web Server
 FROM python:3.12-slim
 
+# กำหนดโฟลเดอร์ทำงานภายใน Container
 WORKDIR /app
 
-# copy requirements ก่อนเพื่อใช้ Docker layer cache
+# Copy requirements และติดตั้ง Dependencies
+# แยกไว้ก่อนเพื่อใช้ Docker Layer Cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# copy สคริปต์ worker เข้าไปใน image
+# Copy Source Code ของ Worker เข้าไปใน Image
 COPY . .
 
-# ไม่ต้อง EXPOSE port เพราะไม่มี web server
-# รันสคริปต์แบบ loop ตลอดเวลา (ไม่ใช่ one-shot)
+# ไม่ต้อง EXPOSE เพราะไม่มี Web Server
+# รัน Worker เพื่อทำงานตรวจสอบและส่งการแจ้งเตือน
 CMD ["python", "notifier.py"]
