@@ -50,7 +50,7 @@ services:
 
       # กำหนดรอบการตรวจสอบและการแจ้งเตือนซ้ำ
       - CHECK_INTERVAL_SECONDS=15
-      - OVERDUE_REPEAT_HOURS=0.02
+      - OVERDUE_REPEAT_HOURS=24
 
     depends_on:
       - db
