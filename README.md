@@ -109,41 +109,9 @@ Background Scheduler จะตรวจสอบรายการที่ย�
 (due date +1 เดือน จัดการวันที่ปลายเดือนให้ถูกต้อง เช่น 31 ม.ค. -> 28/29 ก.พ.)
 ไม่ต้องมาเพิ่มรายการเดิมซ้ำทุกเดือน
 
-
-## 📁 โครงสร้างโปรเจค
-
-```
-bill-reminder/
-├── README.md
-├── docker-compose.yml
-├── app/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── main.py
-│   └── templates/
-│       └── index.html
-└── notifier/
-    ├── Dockerfile
-    ├── requirements.txt
-    └── notifier.py
-```
-
 ---
 
-## ⚙️ Environment Variables
-
-| ตัวแปร | ค่าเริ่มต้น | คำอธิบาย |
-|---|---|---|
-| `REMINDER_THRESHOLDS` | 7,3,1 | จำนวนวันก่อนครบกำหนดที่จะแจ้งเตือนแต่ละระดับ (คั่นด้วย comma) |
-| `DB_HOST` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | - | การเชื่อมต่อฐานข้อมูล (ใช้ร่วมกันทั้ง web และ notifier) |
-| `SMTP_HOST` / `SMTP_PORT` | smtp.gmail.com / 587 | เซิร์ฟเวอร์ที่ใช้ส่งอีเมล |
-| `SMTP_USER` / `SMTP_PASSWORD` | - | อีเมลผู้ส่งและ App Password (ดูวิธีตั้งค่าด้านบน) |
-| `NOTIFY_TO_EMAIL` | เท่ากับ SMTP_USER | อีเมลปลายทางที่จะได้รับแจ้งเตือน |
-| `CHECK_INTERVAL_SECONDS` | 60 | ความถี่ที่ notifier เช็คฐานข้อมูล (วินาที) |
-
----
-
-## 🔮 แนวทางต่อยอด (ถ้าอยากพัฒนาเพิ่ม)
+## 🔮 แนวทางต่อยอด
 
 - เพิ่มระบบ login เพื่อให้แต่ละคนมีรายการของตัวเอง
 - เพิ่ม container Redis เก็บ cache รายการที่เข้าดูบ่อย
